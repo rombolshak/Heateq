@@ -1,6 +1,8 @@
 #include <iostream>
 #include "task.h"
-
+#include "explicitheatsolver.h"
+#include "implicitheatsolver.h"
+#include "plotdatapreparer.h"
 
 /*
  * In order to solve another heat equation
@@ -30,11 +32,9 @@ double boundaryRight(double t) {
 
 int main(int argc, char **argv) {
     Task task(alpha, &f, &initial, &boundaryLeft, &boundaryRight);
-    ExplicitHeatSolver expSolver;
-    ImplicitHeatSolver impSolver;
     PlotDataPreparer preparer;
     
-    preparer.WriteData(expSolver.solve(task), "exp");
-    preparer.WriteData(impSolver.solve(task), "imp");
+    preparer.WriteData(ExplicitHeatSolver::solve(task), "exp");
+    preparer.WriteData(ImplicitHeatSolver::solve(task), "imp");
     return 0;
 }

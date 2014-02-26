@@ -1,10 +1,10 @@
 #include "task.h"
 
 Task::Task(double alpha,
-	   double (*f)(double, double) const, 
-	   double (*initial)(double) const,
-	   double (*boundaryLeft)(double) const,
-	   double (*boundaryRight)(double) const)
+	   double (*f)(double, double), 
+	   double (*initial)(double),
+	   double (*boundaryLeft)(double),
+	   double (*boundaryRight)(double))
 {
     _alpha = alpha;
     _f = f;
