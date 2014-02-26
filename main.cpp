@@ -1,4 +1,6 @@
 #include <iostream>
+#include "task.h"
+
 
 /*
  * In order to solve another heat equation
