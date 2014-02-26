@@ -8,6 +8,8 @@
  * Create a math expression parser is huge overkill imho
  */
 
+const double alpha = 1;
+
 double f(double x, double t) {
     return 0;
 }
@@ -25,6 +27,12 @@ double boundaryRight(double t) {
 }
 
 int main(int argc, char **argv) {
-    std::cout << "Hello, world!" << std::endl;
+    Task task(alpha, &f, &initial, &boundaryLeft, &boundaryRight);
+    ExplicitHeatSolver expSolver;
+    ImplicitHeatSolver impSolver;
+    PlotDataPreparer preparer;
+    
+    preparer.WriteData(expSolver.solve(task), "exp");
+    preparer.WriteData(impSolver.solve(task), "imp");
     return 0;
 }
