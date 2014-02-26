@@ -1,0 +1,4 @@
+[Project]
+Name=Heateq
+Manager=KDevCMakeManager
+VersionControl=kdevgit
