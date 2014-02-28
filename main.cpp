@@ -31,10 +31,10 @@ double boundaryRight(double t) {
 }
 
 int main(int argc, char **argv) {
-    Task task(alpha, &f, &initial, &boundaryLeft, &boundaryRight);
-    PlotDataPreparer preparer;
+    Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight);
+    PlotDataPreparer writer;
     
-    preparer.WriteData(ExplicitHeatSolver::solve(task), "exp");
-    preparer.WriteData(ImplicitHeatSolver::solve(task), "imp");
+    writer.WriteData(ExplicitHeatSolver::solve(task), "exp");
+    //preparer.WriteData(ImplicitHeatSolver::solve(task), "imp");
     return 0;
 }

@@ -6,7 +6,7 @@ class ExplicitHeatSolver
 {
 public:
     ExplicitHeatSolver();
-    static void* solve(Task& task);
+    static void* solve(Task* task);
 };
 
 #endif // EXPLICITHEATSOLVER_H
