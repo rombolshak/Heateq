@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <unistd.h>
+#include <getopt.h>
+#include <stdlib.h>
 #include "task.h"
 #include "explicitheatsolver.h"
 #include "implicitheatsolver.h"
@@ -36,25 +38,50 @@ void printUsage(const char *name) {
     std::cout << 
     "Usage: " << name << " [options] output" << std::endl <<
     "Options: " << std::endl <<
-    "-t n\t\tMaximum time to calculate; default = 10" << std::endl <<
-    "-l n\t\tLeft coordinate; default = 0" << std::endl << 
-    "-r n\t\tRight coordinate; default = 1" << std::endl <<
-    "-ts n\t\tTime step; default = 0.001" << std::endl <<
-    "-cs n\t\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
-    "-tc n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
-    "-cc n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
+    "-h|--help\t\tShow this usage message and quit" << std::endl <<
+    "-m n|--time=n\t\tMaximum time to calculate; default = 10" << std::endl <<
+    "-l n|--left=n\t\tLeft coordinate; default = 0" << std::endl << 
+    "-r n|--right=n\t\tRight coordinate; default = 1" << std::endl <<
+    "-t n|--timestep=n\tTime step; default = 0.001" << std::endl <<
+    "-c n|--coordstep=n\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
+    "-i n|--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
+    "-o n|--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
     std::endl <<
-    "output\t\tName without format. Program'll generate 'output.dat' with plot data and 'output.pl' with script that will produce 'output.gif' result plot" << std::endl <<
+    "output\t\t\tName without format. Program'll generate 'output.dat' with plot data and 'output.pl' with script that will produce 'output.gif' result plot" << std::endl <<
     std::endl;
 }
 
 int main(int argc, char **argv) {
     int param = 0;
+    int option_index = -1;
     opterr = 0;
-    while ((param = getopt(argc, argv, "h")) != -1) {
+    
+    const char *shortOptions = "hmlrtcio";
+    const struct option longOptions[] = {
+	{"help",no_argument,NULL,'h'},
+	{"time",required_argument,NULL,'m'},
+	{"left",required_argument,NULL,'l'},
+	{"right",required_argument,NULL,'r'},
+	{"timestep",required_argument,NULL,'t'},
+	{"coordstep",required_argument,NULL,'c'},
+	{"times",required_argument,NULL,'i'},
+	{"coords",required_argument,NULL,'o'},
+	{NULL,0,NULL,0}
+    };
+    
+    double left=0, right=1, time=10, timestep=0.001, coordstep=0.05, times=0, coords=0;
+    
+    while ((param = getopt_long_only(argc, argv, shortOptions, longOptions, &option_index)) != -1) {
 	switch (param) {
-	    case '?': printUsage(argv[0]); return 0;
+	    case '?': std::cout << "Unknown option! Read this manual carefully" << std::endl; printUsage(argv[0]); return 0;
 	    case 'h': printUsage(argv[0]); return 0;
+	    case 'm': time = atof(optarg); break;
+	    case 'l': left = atof(optarg); break;
+	    case 'r': right = atof(optarg); break;
+	    case 't': timestep = atof(optarg); break;
+	    case 'c': coordstep = atof(optarg); break;
+	    case 'i': times = atof(optarg); break;
+	    case 'o': coords = atof(optarg); break;
 	}
     }
     
