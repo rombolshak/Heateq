@@ -3,10 +3,13 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <algorithm>
+#include <string.h>
 #include "task.h"
 #include "explicitheatsolver.h"
 #include "implicitheatsolver.h"
 #include "plotdatapreparer.h"
+#include "logger.h"
 
 /*
  * In order to solve another heat equation
@@ -46,6 +49,7 @@ void printUsage(const char *name) {
     "-c n|--coordstep=n\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
     "-i n|--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
     "-o n|--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
+    "-v n|--verbose=n\t\tVerbose level: 0 -- errors only, 1 -- 0 + warnings, 2 -- 1 + info, 3 -- full verbose. Default: info" << 
     std::endl <<
     "output\t\t\tName without format. Program'll generate 'output.dat' with plot data and 'output.pl' with script that will produce 'output.gif' result plot" << std::endl <<
     std::endl;
@@ -56,7 +60,12 @@ int main(int argc, char **argv) {
     int option_index = -1;
     opterr = 0;
     
-    const char *shortOptions = "hmlrtcio";
+    char ** itr = std::find(argv, argv+argc, std::string("-v"));
+    if (itr != argv+argc && ++itr != argv+argc) {
+	Logger::setMode(atoi(*itr));
+    }
+    
+    const char *shortOptions = "hm:l:r:t:c:i:o:v:";
     const struct option longOptions[] = {
 	{"help",no_argument,NULL,'h'},
 	{"time",required_argument,NULL,'m'},
@@ -66,6 +75,7 @@ int main(int argc, char **argv) {
 	{"coordstep",required_argument,NULL,'c'},
 	{"times",required_argument,NULL,'i'},
 	{"coords",required_argument,NULL,'o'},
+	{"verbose",required_argument,NULL,'v'},
 	{NULL,0,NULL,0}
     };
     
@@ -86,6 +96,7 @@ int main(int argc, char **argv) {
     }
     
     
+    Logger::verbose("check verbose");
     Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
     PlotDataPreparer writer;
     

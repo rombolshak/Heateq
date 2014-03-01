@@ -1,7 +1,7 @@
 #include "logger.h"
 #include <iostream>
 
-static int Logger::mode = '2';
+int Logger::mode = 2;
 
 void Logger::error(std::string s)
 {
@@ -31,15 +31,14 @@ void Logger::verbose(std::string s)
     }
 }
 
-void Logger::setMode(char mode)
+void Logger::setMode(int mode)
 {
-    switch (mode) {
-	case 'e': Logger::mode = 0; break;
-	case 'w': Logger::mode = 1; break;
-	case 'i': Logger::mode = 2; break;
-	case 'v': Logger::mode = 3; break;
-	default: 
-	    error("Unrecognized logger level, fallback to default: info"); 
-	    Logger::mode = 2;
+    if (mode >= 0 && mode <= 3) {
+	Logger::mode = mode;
     }
+ 
+    else {
+	error("Unrecognized logger level, fallback to default: info"); 
+	Logger::mode = 2;
+    }    
 }
