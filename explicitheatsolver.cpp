@@ -17,9 +17,11 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
 	grid[t] = new double[gridColumns];
     }
     
-    for (int x = 0; x < gridColumns; ++x) {
+    grid[0][0] = task->calcLeftBoundary(0);
+    for (int x = 1; x < gridColumns - 1; ++x) {
 	grid[0][x] = task->calcInitial(x * coordStep + task->getMinCoord());
     }
+    grid[0][gridColumns - 1] = task->calcRightBoundary(task->getMaxTime());
     
     double gamma = timeStep / (coordStep * coordStep);
     for (int t = 1; t < gridRows; ++t) {

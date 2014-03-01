@@ -1,4 +1,5 @@
 #include "task.h"
+#include <algorithm>
 
 Task::Task(double alpha,
 	   double (*f)(double, double), 
@@ -9,7 +10,9 @@ Task::Task(double alpha,
 	   double minCoord,
 	   double maxCoord,
 	   double timeStep,
-	   double coordStep)
+	   double coordStep,
+	   double coordStepsCount,
+	   double timeStepsCount)
 {
     _alpha = alpha;
     _f = f;
@@ -19,8 +22,12 @@ Task::Task(double alpha,
     _maxTime = maxTime;
     _minCoord = minCoord;
     _maxCoord = maxCoord;
-    _timeStep = timeStep;
-    _coordStep = coordStep;
+    
+    _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
+    _timeStep = coordStepsCount == 0 ? timeStep : maxTime / timeStepsCount;
+    
+    double maxTimeStep = 0.5 * _coordStep * _coordStep;
+    _timeStep = std::min(_timeStep, maxTimeStep);
 }
 
 double Task::getAlpha()
