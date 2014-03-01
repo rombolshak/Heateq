@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     }
     
     
-    Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight);
+    Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
     PlotDataPreparer writer;
     
     writer.WriteData(ExplicitHeatSolver::solve(task), "exp");
