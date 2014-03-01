@@ -13,8 +13,8 @@ public:
 	 double maxTime = 10,
 	 double minCoord = 0,
 	 double maxCoord = 1,
-	 double timeStep = 0.1,
-	 double coordStep = 0.01
+	 double timeStep = 0.001,
+	 double coordStep = 0.05
 	);
     
     double getAlpha();

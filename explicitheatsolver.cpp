@@ -1,12 +1,11 @@
 #include "explicitheatsolver.h"
-#include "solvedata.h"
 
 ExplicitHeatSolver::ExplicitHeatSolver()
 {
 
 }
 
-void* ExplicitHeatSolver::solve(Task* task)
+SolveData* ExplicitHeatSolver::solve(Task* task)
 {
     double coordStep = task->getCoordStep();
     double timeStep = task->getTimeStep();

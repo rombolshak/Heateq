@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "task.h"
 #include "explicitheatsolver.h"
 #include "implicitheatsolver.h"
@@ -19,7 +20,7 @@ double f(double x, double t) {
 }
 
 double initial(double x) {
-    return 0;
+    return std::sin(x) * std::sin(x) + std::cos(x);
 }
 
 double boundaryLeft(double t) {
