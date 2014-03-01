@@ -11,7 +11,7 @@ public:
     static void verbose(std::string s);
     static void setMode(int mode);
 private:
-    static int mode;
+    static int _mode;
 };
 
 #endif // LOGGER_H

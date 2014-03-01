@@ -49,7 +49,13 @@ void printUsage(const char *name) {
     "-c n|--coordstep=n\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
     "-i n|--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
     "-o n|--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
-    "-v n|--verbose=n\t\tVerbose level: 0 -- errors only, 1 -- 0 + warnings, 2 -- 1 + info, 3 -- full verbose. Default: info" << 
+    "-v n|--verbose=n\tVerbose level: " << std::endl <<
+    "\t\t\t\t0 -- no output,"<< std::endl <<
+    "\t\t\t\t1 -- errors only, "<< std::endl << 
+    "\t\t\t\t2 -- error + warnings," << std::endl <<
+    "\t\t\t\t3 -- error + warnings + info," << std::endl <<
+    "\t\t\t\t4 -- full verbose."<< std::endl << 
+    "\t\t\t\tDefault: info" << std::endl <<
     std::endl <<
     "output\t\t\tName without format. Program'll generate 'output.dat' with plot data and 'output.pl' with script that will produce 'output.gif' result plot" << std::endl <<
     std::endl;

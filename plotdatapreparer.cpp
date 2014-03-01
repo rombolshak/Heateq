@@ -25,10 +25,6 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     datafile.close();
     
     if (dispose) {
-	for (int t = 0; t < gridRows; ++t) {
-	    delete data->solveGrid[t];
-	}
-	delete data->solveGrid;
-	delete data;
+	data->solveGrid.clear();
     }
 }

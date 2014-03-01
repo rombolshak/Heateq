@@ -1,5 +1,7 @@
 #include "task.h"
+#include "logger.h"
 #include <algorithm>
+#include <sstream>
 
 Task::Task(double alpha,
 	   double (*f)(double, double), 
@@ -24,10 +26,18 @@ Task::Task(double alpha,
     _maxCoord = maxCoord;
     
     _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
-    _timeStep = coordStepsCount == 0 ? timeStep : maxTime / timeStepsCount;
+    _timeStep = timeStepsCount == 0 ? timeStep : maxTime / timeStepsCount;
     
     double maxTimeStep = 0.5 * _coordStep * _coordStep;
     _timeStep = std::min(_timeStep, maxTimeStep);
+    
+    std::ostringstream strs;
+    strs << "Created task with following specifications:" << std::endl <<
+    "Time from 0 to " << _maxTime << std::endl <<
+    "Coordinates from " << _minCoord <<  " to " << _maxCoord << std::endl <<
+    "Timestep is " << _timeStep << ", total times count is " << (_maxTime / _timeStep) << std::endl <<
+    "Coordstep is " << _coordStep << ", total coordinates count is " << ((_maxCoord - _minCoord) / _coordStep) << std::endl;
+    Logger::info(strs.str());    
 }
 
 double Task::getAlpha()
