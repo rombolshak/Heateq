@@ -14,7 +14,7 @@ public:
 	 double minCoord = 0,
 	 double maxCoord = 1,
 	 double timeStep = 0.001,
-	 double coordStep = 0.1,
+	 double coordStep = 0.05,
 	 double coordStepsCount = 0,
 	 double timeStepsCount = 0
 	);
