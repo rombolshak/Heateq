@@ -45,7 +45,6 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile.close();
     
     std::string command = ("`/usr/bin/which chmod` +x " + name + ".pl");
-    std::cout << "command is " << command << std::endl;
     system(command.c_str());
     
     if (dispose) {
