@@ -42,7 +42,7 @@ void printUsage(const char *name) {
     "Usage: " << name << " [options] output" << std::endl <<
     "Options: " << std::endl <<
     "-h|--help\t\tShow this usage message and quit" << std::endl <<
-    "-m n|--time=n\t\tMaximum time to calculate; default = 10" << std::endl <<
+    "-m n|--time=n\t\tMaximum time to calculate; default = 1" << std::endl <<
     "-l n|--left=n\t\tLeft coordinate; default = 0" << std::endl << 
     "-r n|--right=n\t\tRight coordinate; default = 1" << std::endl <<
     "-t n|--timestep=n\tTime step; default = 0.001" << std::endl <<
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 	{NULL,0,NULL,0}
     };
     
-    double left=0, right=1, time=10, timestep=0.001, coordstep=0.05, times=0, coords=0;
+    double left=0, right=1, time=1, timestep=0.001, coordstep=0.05, times=0, coords=0;
     
     while ((param = getopt_long_only(argc, argv, shortOptions, longOptions, &option_index)) != -1) {
 	switch (param) {

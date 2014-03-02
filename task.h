@@ -10,7 +10,7 @@ public:
 	 double (*initial)(double),
 	 double (*boundaryLeft)(double),
 	 double (*boundaryRight)(double),
-	 double maxTime = 10,
+	 double maxTime = 1,
 	 double minCoord = 0,
 	 double maxCoord = 1,
 	 double timeStep = 0.001,
