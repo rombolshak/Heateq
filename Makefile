@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS= -g -O3
-LDFLAGS= -lpthread -lncurses
+LDFLAGS= 
 SRC=*.cpp
 EXECUTABLE=heateq
 

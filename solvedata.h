@@ -6,9 +6,10 @@
 class SolveData
 {
 public:
-    SolveData(Task* task, std::vector< std::vector< double > > grid);
+    SolveData(Task* task, std::vector< std::vector< double > > grid, double yMin, double yMax);
     Task* task;
     std::vector< std::vector< double > > solveGrid;
+    double yMin, yMax;
 };
 
 #endif // SOLVEDATA_H

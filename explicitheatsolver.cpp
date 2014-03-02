@@ -1,8 +1,8 @@
 #include "explicitheatsolver.h"
 #include "logger.h"
-#include <curses.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 ExplicitHeatSolver::ExplicitHeatSolver()
 {
@@ -15,8 +15,6 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
     double timeStep = task->getTimeStep();
     int gridColumns = (task->getMaxCoord() - task->getMinCoord()) / coordStep;
     int gridRows = task->getMaxTime() / task->getTimeStep();
-    
-    double yMin, yMax;
     
     std::vector< std::vector< double > > grid (gridRows, std::vector<double>(gridColumns, 0));
         
@@ -35,6 +33,15 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
 	}
     }
     
-    return new SolveData(task, grid);
+    std::vector<double> vMin(gridRows), vMax(gridRows);
+    for (int i = 0; i < gridRows; ++i) {
+	vMin[i] = (*std::min_element((grid[i]).begin(), (grid[i]).end()));
+	vMax[i] = (*std::max_element((grid[i]).begin(), (grid[i]).end()));
+    }
+    
+    double yMin = (*std::min_element(vMin.begin(), vMin.end()));
+    double yMax = (*std::max_element(vMax.begin(), vMax.end()));
+    
+    return new SolveData(task, grid, yMin, yMax);
 }
 
