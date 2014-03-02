@@ -1,4 +1,5 @@
 #include "plotdatapreparer.h"
+#include "logger.h"
 #include <fstream>
 #include <cstdlib>
 #include <string>
@@ -38,14 +39,30 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile << "set xlabel 'Координата' font 'Helvetica,18'" << std::endl;
     scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
     //scriptfile << "" << std::endl;
-    //scriptfile << "" << std::endl;
-    scriptfile << "do for [i=2:" << (gridRows+1) << "] {" << std::endl;
-    scriptfile << "plot '" << name << ".dat' using 1:i with lines smooth csplines title sprintf(\"t=%f\", (i-2) * " << data->task->getTimeStep() << ")" << std::endl;
+    scriptfile << "progress = 0" << std::endl;
+    scriptfile << "total = " << (gridRows+1) << std::endl;
+    scriptfile << "do for [i=2:total] {" << std::endl;
+    scriptfile << "  current = i * 100 / total" << std::endl;
+    scriptfile << "  if (current > progress) {" << std::endl;
+    scriptfile << "    print current, '%'" << std::endl;
+    scriptfile << "    progress = current" << std::endl;
+    scriptfile << "  }" << std::endl;
+    scriptfile << "  plot '" << name << ".dat' using 1:i with lines smooth csplines title sprintf(\"t=%f\", (i-2) * " << data->task->getTimeStep() << ")" << std::endl;
     scriptfile << "}" << std::endl;
     scriptfile.close();
     
-    std::string command = ("`/usr/bin/which chmod` +x " + name + ".pl");
-    system(command.c_str());
+    std::string chmodCommand = ("`/usr/bin/which chmod` +x " + name + ".pl");
+    system(chmodCommand.c_str());
+    
+    int gnuplotStatus = system("/usr/bin/which gnuplot");
+    if (gnuplotStatus != 0) {
+	Logger::warning("There is no gnuplot found. Please copy " + name + ".pl to machine with installed gnuplot and run: ./" + name + ".pl");
+    }
+    
+    else {
+	std::string gnuplotCommand = "./" + name + ".pl";
+	system(gnuplotCommand.c_str());
+    }
     
     if (dispose) {
 	data->solveGrid.clear();
