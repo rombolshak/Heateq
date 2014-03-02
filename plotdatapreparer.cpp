@@ -1,5 +1,7 @@
 #include "plotdatapreparer.h"
 #include <fstream>
+#include <cstdlib>
+#include <string>
 
 PlotDataPreparer::PlotDataPreparer()
 {
@@ -26,7 +28,8 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     datafile << std::endl;
     datafile.close();
     
-    std::ofstream scriptfile((name + ".pl").c_str(), std::ofstream::out);
+    const char * scriptfilename = (name + ".pl").c_str();
+    std::ofstream scriptfile(scriptfilename, std::ofstream::out);
     scriptfile << "#!/usr/bin/gnuplot -persist" << std::endl;
     scriptfile << "set term gif animate" << std::endl;
     scriptfile << "set output '" << name << ".gif'" << std::endl;
@@ -36,10 +39,14 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
     //scriptfile << "" << std::endl;
     //scriptfile << "" << std::endl;
-    scriptfile << "do for [i=2:" << (gridRows+2) << "] {" << std::endl;
+    scriptfile << "do for [i=2:" << (gridRows+1) << "] {" << std::endl;
     scriptfile << "plot '" << name << ".dat' using 1:i with lines smooth csplines title sprintf(\"t=%f\", (i-2) * " << data->task->getTimeStep() << ")" << std::endl;
     scriptfile << "}" << std::endl;
     scriptfile.close();
+    
+    std::string command = ("`/usr/bin/which chmod` +x " + name + ".pl");
+    std::cout << "command is " << command << std::endl;
+    system(command.c_str());
     
     if (dispose) {
 	data->solveGrid.clear();
