@@ -1,10 +1,9 @@
 #include <iostream>
-#include <cmath>
 #include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <algorithm>
-#include <string.h>
+#include <string>
 #include "task.h"
 #include "explicitheatsolver.h"
 #include "implicitheatsolver.h"
@@ -19,27 +18,15 @@
  * Create a math expression parser is huge overkill imho
  */
 
-const double alpha = 1;
-
-double f(double x, double t) {
-    return 0;
-}
-
-double initial(double x) {
-    return std::sin(x) * std::sin(x) + std::cos(x);
-}
-
-double boundaryLeft(double t) {
-    return 0;
-}
-
-double boundaryRight(double t) {
-    return 0;
-}
+extern const double alpha;
+extern double f(double x, double t);
+extern double initial(double x);
+extern double boundaryLeft(double t);
+extern double boundaryRight(double t);
 
 void printUsage(const char *name) {
     std::cout << 
-    "Usage: " << name << " [options] output" << std::endl <<
+    "Usage: " << name << " [options]" << std::endl <<
     "Options: " << std::endl <<
     "-h|--help\t\tShow this usage message and quit" << std::endl <<
     "-m n|--time=n\t\tMaximum time to calculate; default = 1" << std::endl <<
@@ -47,8 +34,11 @@ void printUsage(const char *name) {
     "-r n|--right=n\t\tRight coordinate; default = 1" << std::endl <<
     "-t n|--timestep=n\tTime step; default = 0.001" << std::endl <<
     "-c n|--coordstep=n\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
-    "-i n|--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
-    "-o n|--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
+    "--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
+    "--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
+    "-o s|--output=s\t\tResult namebase. Program'll generate 'result.dat' with plot data and 'result.pl' with script that will produce 'result.gif' plot. Default: 'result'" << std::endl <<
+    "-i|--implicit\t\tUse implicit scheme" << std::endl <<
+    "-e|--explicit\t\tUse explicit scheme. If both schemes selected, output name will be altered with scheme name" << std::endl <<
     "-v n|--verbose=n\tVerbose level: " << std::endl <<
     "\t\t\t\t0 -- no output,"<< std::endl <<
     "\t\t\t\t1 -- errors only, "<< std::endl << 
@@ -56,8 +46,6 @@ void printUsage(const char *name) {
     "\t\t\t\t3 -- error + warnings + info," << std::endl <<
     "\t\t\t\t4 -- full verbose."<< std::endl << 
     "\t\t\t\tDefault: info" << std::endl <<
-    std::endl <<
-    "output\t\t\tName without format. Program'll generate 'output.dat' with plot data and 'output.pl' with script that will produce 'output.gif' result plot" << std::endl <<
     std::endl;
 }
 
@@ -71,7 +59,7 @@ int main(int argc, char **argv) {
 	Logger::setMode(atoi(*itr));
     }
     
-    const char *shortOptions = "hm:l:r:t:c:i:o:v:";
+    const char *shortOptions = "hm:l:r:t:c:v:o:ie";
     const struct option longOptions[] = {
 	{"help",no_argument,NULL,'h'},
 	{"time",required_argument,NULL,'m'},
@@ -79,34 +67,58 @@ int main(int argc, char **argv) {
 	{"right",required_argument,NULL,'r'},
 	{"timestep",required_argument,NULL,'t'},
 	{"coordstep",required_argument,NULL,'c'},
-	{"times",required_argument,NULL,'i'},
-	{"coords",required_argument,NULL,'o'},
+	{"times",required_argument,NULL,330},
+	{"coords",required_argument,NULL,340},
+	{"output",required_argument,NULL,'o'},
+	{"implicit", no_argument, NULL, 'i'},
+	{"explicit", no_argument, NULL, 'e'},
 	{"verbose",required_argument,NULL,'v'},
 	{NULL,0,NULL,0}
     };
     
     double left=0, right=1, time=1, timestep=0.001, coordstep=0.05, times=0, coords=0;
+    std::string output, output_imp, output_exp;
+    output = output_imp = output_exp = "result";
+    bool imp = false, exp = false;
     
+    Logger::verbose("Parsing params");
     while ((param = getopt_long_only(argc, argv, shortOptions, longOptions, &option_index)) != -1) {
 	switch (param) {
-	    case '?': std::cout << "Unknown option! Read this manual carefully" << std::endl; printUsage(argv[0]); return 0;
-	    case 'h': printUsage(argv[0]); return 0;
-	    case 'm': time = atof(optarg); break;
-	    case 'l': left = atof(optarg); break;
-	    case 'r': right = atof(optarg); break;
-	    case 't': timestep = atof(optarg); break;
-	    case 'c': coordstep = atof(optarg); break;
-	    case 'i': times = atof(optarg); break;
-	    case 'o': coords = atof(optarg); break;
+	    case '?': Logger::error("Unknown option! Read this manual carefully"); printUsage(argv[0]); return 0;
+	    case 'h': Logger::verbose("Show help"); printUsage(argv[0]); return 0;
+	    case 'm': time = atof(optarg); 	Logger::verbose("Set max time to " + std::to_string(time)); break;
+	    case 'l': left = atof(optarg); 	Logger::verbose("Set left to " + std::to_string(left)); break;
+	    case 'r': right = atof(optarg); 	Logger::verbose("Set right to " + std::to_string(right)); break;
+	    case 't': timestep = atof(optarg); 	Logger::verbose("Set time step to " + std::to_string(timestep)); break;
+	    case 'c': coordstep = atof(optarg); Logger::verbose("Set coordinate step to " + std::to_string(coordstep)); break;
+	    case 330: times = atof(optarg); 	Logger::verbose("Set times count to " + std::to_string(times) + ". Time step'll be recalculated"); break;
+	    case 340: coords = atof(optarg); 	Logger::verbose("Set coordinates count to " + std::to_string(coords) + ". Coordinate step'll be recalculated"); break;
+	    case 'o': output = optarg; 		Logger::verbose("Set output basename to " + output); break;
+	    case 'i': imp = true; break;
+	    case 'e': exp = true; break;
 	}
     }
     
+    if (!exp || !imp) {
+	Logger::error("You must specify at least one solving scheme with -i for implicit scheme and/or -e for explicit");
+	return 1;
+    }
     
-    Logger::verbose("check verbose");
+    if (exp && imp) {
+	output_imp += "_implicit";
+	output_exp += "_explicit";
+    }
+    
+    Logger::verbose("Create task");
     Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
     PlotDataPreparer writer;
     
-    writer.WriteData(ExplicitHeatSolver::solve(task), "exp");
-    //preparer.WriteData(ImplicitHeatSolver::solve(task), "imp");
+    if (exp) {
+	writer.WriteData(ExplicitHeatSolver::solve(task), output_exp);
+    }
+    
+    if (imp) {
+	writer.WriteData(ImplicitHeatSolver::solve(task), output_imp);
+    }
     return 0;
 }

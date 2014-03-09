@@ -25,11 +25,34 @@ Task::Task(double alpha,
     _minCoord = minCoord;
     _maxCoord = maxCoord;
     
+    if (_maxCoord - _minCoord < 1e-6) {
+	Logger::error("Coordinates difference too small. Nothing to compute. Quit");
+	exit(1);
+    }
+    
+    if (_maxTime <= 0) {
+	Logger::error("Unacceptable time");
+	exit(1);
+    }
+    
+    if (coordStepsCount < 0) {
+	Logger::warning("Coords count negative. Assume you meant " + std::to_string(-coordStepsCount));
+	coordStepsCount = -coordStepsCount;
+    }
+    
+    if (timeStepsCount < 0) {
+	Logger::warning("Times count negative. Assume you meant " + std::to_string(-timeStepsCount));
+	timeStepsCount = -timeStepsCount;
+    }
+    
     _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
     _timeStep = timeStepsCount == 0 ? timeStep : maxTime / timeStepsCount;
     
     double maxTimeStep = 0.5 * _coordStep * _coordStep;
-    _timeStep = std::min(_timeStep, maxTimeStep);
+    if (maxTimeStep < _timeStep) {
+	Logger::warning("Time step has inappropiate value. It was shrank to " + std::to_string(maxTimeStep));
+	_timeStep = maxTimeStep;
+    }
     
     std::ostringstream strs;
     strs << "Created task with following specifications:" << std::endl <<

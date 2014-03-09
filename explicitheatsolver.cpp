@@ -17,12 +17,15 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
     int gridRows = task->getMaxTime() / task->getTimeStep();
     
     std::vector< std::vector< double > > grid (gridRows, std::vector<double>(gridColumns, 0));
+    Logger::verbose("Grid allocated");
         
     grid[0][0] = task->calcLeftBoundary(0);
     grid[0][gridColumns - 1] = task->calcRightBoundary(task->getMaxTime());
     for (int x = 1; x < gridColumns - 1; ++x) {
 	grid[0][x] = task->calcInitial(x * coordStep + task->getMinCoord());
     }
+    
+    Logger::verbose("Initial values computed");
     
     double gamma = timeStep / (coordStep * coordStep);    
     for (int t = 1; t < gridRows; ++t) {
@@ -33,6 +36,7 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
 	}
     }
     
+    Logger::verbose("Complete grid computed");
     std::vector<double> vMin(gridRows), vMax(gridRows);
     for (int i = 0; i < gridRows; ++i) {
 	vMin[i] = (*std::min_element((grid[i]).begin(), (grid[i]).end()));
@@ -42,6 +46,7 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
     double yMin = (*std::min_element(vMin.begin(), vMin.end()));
     double yMax = (*std::max_element(vMax.begin(), vMax.end()));
     
+    Logger::verbose("Found min and max temperature values: " + std::to_string(yMin) + " and " + std::to_string(yMax) + " respectively");
     return new SolveData(task, grid, yMin, yMax);
 }
 

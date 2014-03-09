@@ -1,7 +1,22 @@
 #include "logger.h"
 #include <iostream>
+#include <time.h>
+#include <string>
+#include <stdio.h>
 
 int Logger::_mode = 3;
+
+void Logger::write(std::string s)
+{
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%X", &tstruct);
+    std::cout << buf << ": " << s;
+}
 
 void Logger::error(std::string s)
 {

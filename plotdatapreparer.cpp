@@ -4,6 +4,13 @@
 #include <cstdlib>
 #include <string>
 
+extern std::string alpha_description();
+extern std::string f_description();
+extern std::string initial_description();
+extern std::string left_description();
+extern std::string right_description();
+
+
 PlotDataPreparer::PlotDataPreparer()
 {
 
@@ -16,7 +23,10 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     int gridColumns = (data->task->getMaxCoord() - data->task->getMinCoord()) / coordStep;
     int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
     
-    std::ofstream datafile((name + ".dat").c_str(), std::ofstream::out);
+    std::string datafilename = name + ".dat";
+    Logger::verbose("Begin writing data file: " + datafilename);
+    
+    std::ofstream datafile(datafilename.c_str(), std::ofstream::out);
     for (int x = 0; x < gridColumns; ++x) {
 	datafile << (x * coordStep + data->task->getMinCoord()) << " ";
 	for (int t = 0; t < gridRows; ++t) {
@@ -29,10 +39,21 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     datafile << std::endl;
     datafile.close();
     
-    const char * scriptfilename = (name + ".pl").c_str();
-    std::ofstream scriptfile(scriptfilename, std::ofstream::out);
+    Logger::verbose("Datafile has been written");
+    
+    std::string scriptfilename = name + ".pl";
+    Logger::verbose("Writing script file: " + scriptfilename);
+    
+    std::ofstream scriptfile(scriptfilename.c_str(), std::ofstream::out);
     scriptfile << "#!/usr/bin/gnuplot -persist" << std::endl;
-    scriptfile << "set term gif animate" << std::endl;
+    scriptfile << "set term gif animate enhanced" << std::endl;
+    scriptfile << "set nokey" << std::endl;
+    
+    scriptfile << "set title \"u_{t} = " << alpha_description() << " * u_{xx} + " << f_description() << 
+    "\\nu(x,0) = " << initial_description() << 
+    "\\n{/Symbol m}_{1}(t) = " << left_description() << 
+    "\\n{/Symbol m}_{2}(t) = " << right_description() << "\"" << std::endl;
+    
     scriptfile << "set output '" << name << ".gif'" << std::endl;
     scriptfile << "set xrange [" << data->task->getMinCoord() << ":" << data->task->getMaxCoord() << "]" << std::endl;
     scriptfile << "set yrange [" << data->yMin << ":" << data->yMax << "]" << std::endl;
@@ -51,20 +72,24 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile << "}" << std::endl;
     scriptfile.close();
     
-    std::string chmodCommand = ("`/usr/bin/which chmod` +x " + name + ".pl");
+    Logger::verbose("Chmod script file to be executable");
+    std::string chmodCommand = ("`/usr/bin/which chmod` +x " + scriptfilename);
     system(chmodCommand.c_str());
     
+    Logger::verbose("Check for gnuplot installed");
     int gnuplotStatus = system("/usr/bin/which gnuplot");
     if (gnuplotStatus != 0) {
-	Logger::warning("There is no gnuplot found. Please copy " + name + ".pl to machine with installed gnuplot and run: ./" + name + ".pl");
+	Logger::warning("There is no gnuplot found. Please copy " + scriptfilename + " to machine with installed gnuplot and run: ./" + scriptfilename);
     }
     
     else {
-	std::string gnuplotCommand = "./" + name + ".pl";
+	Logger::verbose("Running gnuplot");
+	std::string gnuplotCommand = "./" + scriptfilename;
 	system(gnuplotCommand.c_str());
     }
     
     if (dispose) {
+	Logger::verbose("Dispose data");
 	data->solveGrid.clear();
     }
 }

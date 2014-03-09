@@ -10,6 +10,7 @@ public:
     static void info(std::string s);
     static void verbose(std::string s);
     static void setMode(int mode);
+    static void write(std::string s);
 private:
     static int _mode;
 };
