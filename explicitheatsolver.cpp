@@ -11,6 +11,8 @@ ExplicitHeatSolver::ExplicitHeatSolver()
 
 SolveData* ExplicitHeatSolver::solve(Task* task)
 {
+    Logger::info("Start explicit scheme solver");
+    
     double coordStep = task->getCoordStep();
     double timeStep = task->getTimeStep();
     int gridColumns = (task->getMaxCoord() - task->getMinCoord()) / coordStep;
@@ -18,7 +20,7 @@ SolveData* ExplicitHeatSolver::solve(Task* task)
     
     std::vector< std::vector< double > > grid (gridRows, std::vector<double>(gridColumns, 0));
     Logger::verbose("Grid allocated");
-        
+
     grid[0][0] = task->calcLeftBoundary(0);
     grid[0][gridColumns - 1] = task->calcRightBoundary(task->getMaxTime());
     for (int x = 1; x < gridColumns - 1; ++x) {

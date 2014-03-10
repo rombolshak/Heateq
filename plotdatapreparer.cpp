@@ -23,12 +23,28 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     int gridColumns = (data->task->getMaxCoord() - data->task->getMinCoord()) / coordStep;
     int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
     
+    writeDatafile(name, data);
+    writeScriptfile(name, data);
+    execute(name);
+    
+    if (dispose) {
+	Logger::verbose("Dispose data");
+	data->solveGrid.clear();
+    }
+}
+
+void PlotDataPreparer::writeDatafile(std::string name, SolveData* data)
+{
+    double coordStep = data->task->getCoordStep();
+    double minCoord = data->task->getMinCoord();
+    int gridColumns = (data->task->getMaxCoord() - minCoord) / coordStep;
+    int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
     std::string datafilename = name + ".dat";
     Logger::verbose("Begin writing data file: " + datafilename);
     
     std::ofstream datafile(datafilename.c_str(), std::ofstream::out);
     for (int x = 0; x < gridColumns; ++x) {
-	datafile << (x * coordStep + data->task->getMinCoord()) << " ";
+	datafile << (x * coordStep + minCoord) << " ";
 	for (int t = 0; t < gridRows; ++t) {
 	    datafile << data->solveGrid[t][x] << " ";
 	}
@@ -40,7 +56,10 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     datafile.close();
     
     Logger::verbose("Datafile has been written");
-    
+}
+
+void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
+{
     std::string scriptfilename = name + ".pl";
     Logger::verbose("Writing script file: " + scriptfilename);
     
@@ -61,7 +80,7 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
     //scriptfile << "" << std::endl;
     scriptfile << "progress = 0" << std::endl;
-    scriptfile << "total = " << (gridRows+1) << std::endl;
+    scriptfile << "total = " << ((data->task->getMaxTime() / data->task->getTimeStep())+1) << std::endl;
     scriptfile << "do for [i=2:total] {" << std::endl;
     scriptfile << "  current = i * 100 / total" << std::endl;
     scriptfile << "  if (current > progress) {" << std::endl;
@@ -71,13 +90,19 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
     scriptfile << "  plot '" << name << ".dat' using 1:i with lines smooth csplines title sprintf(\"t=%f\", (i-2) * " << data->task->getTimeStep() << ")" << std::endl;
     scriptfile << "}" << std::endl;
     scriptfile.close();
+    Logger::verbose("Scriptfile has been written");
     
     Logger::verbose("Chmod script file to be executable");
     std::string chmodCommand = ("`/usr/bin/which chmod` +x " + scriptfilename);
     system(chmodCommand.c_str());
-    
+}
+
+void PlotDataPreparer::execute(std::string name)
+{
+    std::string scriptfilename = name + ".pl";
     Logger::verbose("Check for gnuplot installed");
     int gnuplotStatus = system("/usr/bin/which gnuplot");
+    
     if (gnuplotStatus != 0) {
 	Logger::warning("There is no gnuplot found. Please copy " + scriptfilename + " to machine with installed gnuplot and run: ./" + scriptfilename);
     }
@@ -86,10 +111,5 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
 	Logger::verbose("Running gnuplot");
 	std::string gnuplotCommand = "./" + scriptfilename;
 	system(gnuplotCommand.c_str());
-    }
-    
-    if (dispose) {
-	Logger::verbose("Dispose data");
-	data->solveGrid.clear();
     }
 }

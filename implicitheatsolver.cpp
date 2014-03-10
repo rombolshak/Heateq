@@ -26,28 +26,22 @@ SolveData* ImplicitHeatSolver::solve(Task* task)
     
     Logger::verbose("Initial values computed");
     
-    double gamma = timeStep / (coordStep * coordStep);    
+    double gamma = timeStep / (coordStep * coordStep);
+    int n = gridColumns - 2;
+    double a = -gamma;
+    double b = -gamma;
+    
     for (int t = 1; t < gridRows; ++t) {
+	
+	std::vector<double> c(n, 1 + 2 * gamma);
+	std::vector<double> f(n, 0);
+    
 	grid[t][0] = task->calcLeftBoundary(t);
 	grid[t][gridColumns - 1] = task->calcRightBoundary(t);
 	
-	/** 
-	    * @see http://ru.wikibooks.org/wiki/%D0%9F%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%BD%D1%8B%D0%B5_%D1%80%D0%B5%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D0%B8_%D0%BC%D0%B5%D1%82%D0%BE%D0%B4%D0%B0_%D0%BF%D1%80%D0%BE%D0%B3%D0%BE%D0%BD%D0%BA%D0%B8
-	    * n = gridColumns - 2
-	    * a[i] = -gamma for all i
-	    * b[i] = -gamma for all i
-	    * c[i] = (1 + 2*gamma) for all i
-	    * f[i] = grid[t-1][i] + timeStep * task->calcF(i, t)
-	    * x[i] = grid[t][i]
-	    */
-	int n = gridColumns - 2;
-	double a = -gamma;
-	double b = -gamma;
-	std::vector<double> c(n, 1 + 2 * gamma);
-	
-	std::vector<double> f(n, 0);
 	f[0] = gamma * grid[t][0];
 	f[n-1] = gamma * grid[t][gridColumns - 1];
+	
 	for (int i = 0; i < n; ++i) {
 	    f[i] += grid[t - 1][i + 1] + timeStep * task->calcF(i + 1, t);
 	}
