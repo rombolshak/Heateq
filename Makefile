@@ -7,7 +7,7 @@ EXECUTABLE=heateq
 DESCRIBER=describe_task.sh
 TASK_CPP=task_definition.cpp task_defines.cpp
 
-heateq: $(SRC)
+heateq: $(SRC) $(DESCRIBER)
 	chmod +x $(DESCRIBER)
 	./$(DESCRIBER)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(TASK_CPP) $(SRC) -o $(EXECUTABLE)

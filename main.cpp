@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 	    case 'c': coordstep = atof(optarg); Logger::verbose("Set coordinate step to " + std::to_string(coordstep)); break;
 	    case 330: times = atof(optarg); 	Logger::verbose("Set times count to " + std::to_string(times) + ". Time step'll be recalculated"); break;
 	    case 340: coords = atof(optarg); 	Logger::verbose("Set coordinates count to " + std::to_string(coords) + ". Coordinate step'll be recalculated"); break;
-	    case 'o': output = optarg; 		Logger::verbose("Set output basename to " + output); break;
+	    case 'o': output = output_imp = output_exp = optarg; 		Logger::verbose("Set output basename to " + output); break;
 	    case 'i': imp = true; break;
 	    case 'e': exp = true; break;
 	}

@@ -3,10 +3,10 @@
 ME=`basename $0`
 
 ALPHA='1'
-F="0"
-I="2 * cos(x) + sin(x)"
-BL="10 * sin(50*t)"
-BR="10 * cos(50*t)"
+F="cos(x) + sin(t)"
+I="100500"
+BL="-t"
+BR="t"
 
 OUTPUT_FUNCTIONS="""
 /*
