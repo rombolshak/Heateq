@@ -10,6 +10,8 @@ ImplicitHeatSolver::ImplicitHeatSolver()
 
 SolveData* ImplicitHeatSolver::solve(Task* task)
 {
+    Logger::info("Start implicit scheme solver");
+    
     double coordStep = task->getCoordStep();
     double timeStep = task->getTimeStep();
     int gridColumns = (task->getMaxCoord() - task->getMinCoord()) / coordStep;
