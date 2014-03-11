@@ -45,6 +45,10 @@ Task::Task(double alpha,
 	timeStepsCount = -timeStepsCount;
     }
     
+    if (_initial(0) != _boundaryLeft(minCoord) || _initial(maxTime) != _boundaryRight(maxCoord)) {
+	Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
+    }
+    
     _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
     _timeStep = timeStepsCount == 0 ? timeStep : maxTime / timeStepsCount;
     
