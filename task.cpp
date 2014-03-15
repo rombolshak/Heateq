@@ -3,11 +3,10 @@
 #include <algorithm>
 #include <sstream>
 
-Task::Task(double alpha,
-	   double (*f)(double, double), 
-	   double (*initial)(double),
-	   double (*boundaryLeft)(double),
-	   double (*boundaryRight)(double),
+Task::Task(std::complex<double> (*f)(double, double), 
+	   std::complex<double> (*initial)(double),
+	   std::complex<double> (*boundaryLeft)(double),
+	   std::complex<double> (*boundaryRight)(double),
 	   double maxTime,
 	   double minCoord,
 	   double maxCoord,
@@ -16,7 +15,6 @@ Task::Task(double alpha,
 	   double coordStepsCount,
 	   double timeStepsCount)
 {
-    _alpha = alpha;
     _f = f;
     _initial = initial;
     _boundaryLeft = boundaryLeft;
@@ -45,7 +43,7 @@ Task::Task(double alpha,
 	timeStepsCount = -timeStepsCount;
     }
     
-    if (_initial(0) != _boundaryLeft(minCoord) || _initial(maxTime) != _boundaryRight(maxCoord)) {
+    if (_initial(minCoord) != _boundaryLeft(0) || _initial(maxCoord) != _boundaryRight(0)) {
 	Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
     }
     
@@ -67,27 +65,22 @@ Task::Task(double alpha,
     Logger::info(strs.str());    
 }
 
-double Task::getAlpha()
-{
-    return _alpha;
-}
-
-double Task::calcF(double x, double t)
+std::complex<double> Task::calcF(double x, double t)
 {
     return _f(x, t);
 }
 
-double Task::calcInitial(double x)
+std::complex<double> Task::calcInitial(double x)
 {
     return _initial(x);
 }
 
-double Task::calcLeftBoundary(double t)
+std::complex<double> Task::calcLeftBoundary(double t)
 {
     return _boundaryLeft(t);
 }
 
-double Task::calcRightBoundary(double t)
+std::complex< double > Task::calcRightBoundary(double t)
 {
     return _boundaryRight(t);
 }

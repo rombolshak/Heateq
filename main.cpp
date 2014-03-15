@@ -5,24 +5,14 @@
 #include <algorithm>
 #include <string>
 #include "task.h"
-#include "explicitheatsolver.h"
-#include "implicitheatsolver.h"
+#include "solver.h"
 #include "plotdatapreparer.h"
 #include "logger.h"
 
-/*
- * In order to solve another heat equation
- * you need to change 4 functions below
- * and recompile the program.
- * 
- * Create a math expression parser is huge overkill imho
- */
-
-extern const double alpha;
-extern double f(double x, double t);
-extern double initial(double x);
-extern double boundaryLeft(double t);
-extern double boundaryRight(double t);
+extern std::complex< double > f(double x, double t);
+extern std::complex< double > initial(double x);
+extern std::complex< double > boundaryLeft(double t);
+extern std::complex< double > boundaryRight(double t);
 
 void printUsage(const char *name) {
     std::cout << 
@@ -37,8 +27,6 @@ void printUsage(const char *name) {
     "--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
     "--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
     "-o s|--output=s\t\tResult namebase. Program'll generate 'result.dat' with plot data and 'result.pl' with script that will produce 'result.gif' plot. Default: 'result'" << std::endl <<
-    "-i|--implicit\t\tUse implicit scheme" << std::endl <<
-    "-e|--explicit\t\tUse explicit scheme. If both schemes selected, output name will be altered with scheme name" << std::endl <<
     "-v n|--verbose=n\tVerbose level: " << std::endl <<
     "\t\t\t\t0 -- no output,"<< std::endl <<
     "\t\t\t\t1 -- errors only, "<< std::endl << 
@@ -59,7 +47,7 @@ int main(int argc, char **argv) {
 	Logger::setMode(atoi(*itr));
     }
     
-    const char *shortOptions = "hm:l:r:t:c:v:o:ie";
+    const char *shortOptions = "hm:l:r:t:c:v:o:";
     const struct option longOptions[] = {
 	{"help",no_argument,NULL,'h'},
 	{"time",required_argument,NULL,'m'},
@@ -70,16 +58,13 @@ int main(int argc, char **argv) {
 	{"times",required_argument,NULL,330},
 	{"coords",required_argument,NULL,340},
 	{"output",required_argument,NULL,'o'},
-	{"implicit", no_argument, NULL, 'i'},
-	{"explicit", no_argument, NULL, 'e'},
 	{"verbose",required_argument,NULL,'v'},
 	{NULL,0,NULL,0}
     };
     
     double left=0, right=1, time=1, timestep=0.001, coordstep=0.05, times=0, coords=0;
-    std::string output, output_imp, output_exp;
-    output = output_imp = output_exp = "result";
-    bool imp = false, exp = false;
+    std::string output;
+    output = "result";
     
     Logger::verbose("Parsing params");
     while ((param = getopt_long_only(argc, argv, shortOptions, longOptions, &option_index)) != -1) {
@@ -93,32 +78,15 @@ int main(int argc, char **argv) {
 	    case 'c': coordstep = atof(optarg); Logger::verbose("Set coordinate step to " + std::to_string(coordstep)); break;
 	    case 330: times = atof(optarg); 	Logger::verbose("Set times count to " + std::to_string(times) + ". Time step'll be recalculated"); break;
 	    case 340: coords = atof(optarg); 	Logger::verbose("Set coordinates count to " + std::to_string(coords) + ". Coordinate step'll be recalculated"); break;
-	    case 'o': output = output_imp = output_exp = optarg; 		Logger::verbose("Set output basename to " + output); break;
-	    case 'i': imp = true; break;
-	    case 'e': exp = true; break;
+	    case 'o': output = optarg; 		Logger::verbose("Set output basename to " + output); break;	    
 	}
     }
     
-    if (!exp || !imp) {
-	Logger::error("You must specify at least one solving scheme with -i for implicit scheme and/or -e for explicit");
-	return 1;
-    }
-    
-    if (exp && imp) {
-	output_imp += "_implicit";
-	output_exp += "_explicit";
-    }
-    
     Logger::verbose("Create task");
-    Task *task = new Task(alpha, &f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
+    Task *task = new Task(&f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
     PlotDataPreparer writer;
     
-    if (exp) {
-	writer.WriteData(ExplicitHeatSolver::solve(task), output_exp);
-    }
+    writer.WriteData(Solver::solve(task), output);
     
-    if (imp) {
-	writer.WriteData(ImplicitHeatSolver::solve(task), output_imp);
-    }
     return 0;
 }

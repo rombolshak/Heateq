@@ -1,14 +1,10 @@
-#include "implicitheatsolver.h"
+#include "solver.h"
 #include "logger.h"
 #include <vector>
 #include <algorithm>
+#include <complex>
 
-ImplicitHeatSolver::ImplicitHeatSolver()
-{
-
-}
-
-SolveData* ImplicitHeatSolver::solve(Task* task)
+SolveData* Solver::solve(Task* task)
 {
     Logger::info("Start implicit scheme solver");
     
@@ -17,7 +13,7 @@ SolveData* ImplicitHeatSolver::solve(Task* task)
     int gridColumns = (task->getMaxCoord() - task->getMinCoord()) / coordStep;
     int gridRows = task->getMaxTime() / task->getTimeStep();
     
-    std::vector< std::vector< double > > grid (gridRows, std::vector<double>(gridColumns, 0));
+    std::vector< std::vector< std::complex<double> > > grid (gridRows, std::vector< std::complex< double > >(gridColumns, std::complex<double>(0)));
     Logger::verbose("Grid allocated");
     
     grid[0][0] = task->calcLeftBoundary(0);
@@ -30,25 +26,30 @@ SolveData* ImplicitHeatSolver::solve(Task* task)
     
     double gamma = timeStep / (coordStep * coordStep);
     int n = gridColumns - 2;
-    double a = -gamma;
-    double b = -gamma;
+    std::complex<double> a(0, -gamma / 2);
+    std::complex<double> b(0, -gamma / 2);
     
     for (int t = 1; t < gridRows; ++t) {
 	
-	std::vector<double> c(n, 1 + 2 * gamma);
-	std::vector<double> f(n, 0);
+	std::vector< std::complex<double> > c(n, 0);
+	std::vector< std::complex<double> > f(n, 0);
     
 	grid[t][0] = task->calcLeftBoundary(t);
 	grid[t][gridColumns - 1] = task->calcRightBoundary(t);
 	
-	f[0] = gamma * grid[t][0];
-	f[n-1] = gamma * grid[t][gridColumns - 1];
-	
+	std::complex<double> iUnit(0, timeStep), onePlusGammaI(1, gamma);
 	for (int i = 0; i < n; ++i) {
-	    f[i] += grid[t - 1][i + 1] + timeStep * task->calcF(i + 1, t);
+	    c[i] = onePlusGammaI - iUnit * task->calcF(i + 1, t);
 	}
 	
-	double m;
+	f[0] = -a * grid[t][0];
+	f[n-1] = -b * grid[t][gridColumns - 1];
+	
+	for (int i = 0; i < n; ++i) {
+	    f[i] += grid[t - 1][i + 1];
+	}
+	
+	std::complex<double> m;
 	for (int i = 1; i < n; ++i) {
 	    m = a / c[i - 1];
 	    c[i] -= m * b;
@@ -61,16 +62,6 @@ SolveData* ImplicitHeatSolver::solve(Task* task)
 	}
     }
     
-    Logger::verbose("Complete grid computed");
-    std::vector<double> vMin(gridRows), vMax(gridRows);
-    for (int i = 0; i < gridRows; ++i) {
-	vMin[i] = (*std::min_element((grid[i]).begin(), (grid[i]).end()));
-	vMax[i] = (*std::max_element((grid[i]).begin(), (grid[i]).end()));
-    }
-    
-    double yMin = (*std::min_element(vMin.begin(), vMin.end()));
-    double yMax = (*std::max_element(vMax.begin(), vMax.end()));
-    
-    Logger::verbose("Found min and max temperature values: " + std::to_string(yMin) + " and " + std::to_string(yMax) + " respectively");
-    return new SolveData(task, grid, yMin, yMax);
+    Logger::verbose("Grid completely computed");
+    return new SolveData(task, grid);
 }

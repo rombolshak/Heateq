@@ -14,6 +14,7 @@ private:
     void writeDatafile(std::string name, SolveData* data);
     void writeScriptfile(std::string name, SolveData* data);
     void execute(std::string name);
+    double _yMin, _yMax;
 };
 
 #endif // PLOTDATAPREPARER_H

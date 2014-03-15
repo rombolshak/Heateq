@@ -2,11 +2,11 @@
 
 ME=`basename $0`
 
-ALPHA='1'
-F="cos(x) + sin(t)"
-I="100500"
-BL="-t"
-BR="t"
+ALPHA='i/2'
+F="x*x/2 + 15 * x * sin(t)"
+I="1/sqrt(sqrt(3.1415926)) * exp(-x * x / 2)"
+BL="0"
+BR="0"
 
 OUTPUT_FUNCTIONS="""
 /*
@@ -14,7 +14,6 @@ OUTPUT_FUNCTIONS="""
  * If you wanna change these functions, look into $ME
  */
 #include <math.h>
-extern const double alpha = $ALPHA;
 
 extern double f(double x, double t) {
     return $F;

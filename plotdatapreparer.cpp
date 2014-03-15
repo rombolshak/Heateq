@@ -39,23 +39,51 @@ void PlotDataPreparer::writeDatafile(std::string name, SolveData* data)
     double minCoord = data->task->getMinCoord();
     int gridColumns = (data->task->getMaxCoord() - minCoord) / coordStep;
     int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
-    std::string datafilename = name + ".dat";
-    Logger::verbose("Begin writing data file: " + datafilename);
     
-    std::ofstream datafile(datafilename.c_str(), std::ofstream::out);
+    std::string realdatafilename = name + "_real.dat";
+    std::string imagdatafilename = name + "_imag.dat";
+    std::string absdatafilename = name + "_abs.dat";
+    Logger::verbose("Begin writing data files: " + realdatafilename + ", " + imagdatafilename + ", " + absdatafilename);
+    
+    std::ofstream realdatafile(realdatafilename.c_str(), std::ofstream::out);
+    std::ofstream imagdatafile(imagdatafilename.c_str(), std::ofstream::out);
+    std::ofstream absdatafile(absdatafilename.c_str(), std::ofstream::out);
+    
+    _yMax = _yMin = (data->solveGrid[0][0]).real();
+    double real, imag, absolute;
     for (int x = 0; x < gridColumns; ++x) {
-	datafile << (x * coordStep + minCoord) << " ";
+	realdatafile << (x * coordStep + minCoord) << " ";
+	imagdatafile << (x * coordStep + minCoord) << " ";
+	absdatafile << (x * coordStep + minCoord) << " ";
+	
 	for (int t = 0; t < gridRows; ++t) {
-	    datafile << data->solveGrid[t][x] << " ";
+	    real = (data->solveGrid[t][x]).real();
+	    imag = (data->solveGrid[t][x]).imag();
+	    absolute = sqrt(real * real + imag * imag);
+	    
+	    _yMax = std::max<double>(_yMax, std::max<double>(real, std::max<double>(imag, absolute)));
+	    _yMin = std::min<double>(_yMin, std::min<double>(real, std::min<double>(imag, absolute)));
+	    
+	    realdatafile << real << " ";
+	    imagdatafile << imag << " ";
+	    absdatafile << absolute << " ";
 	}
 	
-	datafile << std::endl;
+	realdatafile << std::endl;
+	imagdatafile << std::endl;
+	absdatafile << std::endl;
     }
     
-    datafile << std::endl;
-    datafile.close();
+    realdatafile << std::endl;
+    realdatafile.close();
     
-    Logger::verbose("Datafile has been written");
+    imagdatafile << std::endl;
+    imagdatafile.close();
+    
+    absdatafile << std::endl;
+    absdatafile.close();
+    
+    Logger::verbose("Datafiles has been written");
 }
 
 void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
@@ -66,16 +94,15 @@ void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
     std::ofstream scriptfile(scriptfilename.c_str(), std::ofstream::out);
     scriptfile << "#!/usr/bin/gnuplot -persist" << std::endl;
     scriptfile << "set term gif animate enhanced" << std::endl;
-    scriptfile << "set nokey" << std::endl;
     
-    scriptfile << "set title \"u_{t} = " << alpha_description() << " * u_{xx} + " << f_description() << 
-    "\\nu(x,0) = " << initial_description() << 
-    "\\n{/Symbol m}_{1}(t) = " << left_description() << 
-    "\\n{/Symbol m}_{2}(t) = " << right_description() << "\"" << std::endl;
+    //scriptfile << "set title \"u_{t} = " << alpha_description() << " * u_{xx} + " << f_description() << 
+    //"\\nu(x,0) = " << initial_description() << 
+    //"\\n{/Symbol m}_{1}(t) = " << left_description() << 
+    //"\\n{/Symbol m}_{2}(t) = " << right_description() << "\"" << std::endl;
     
     scriptfile << "set output '" << name << ".gif'" << std::endl;
     scriptfile << "set xrange [" << data->task->getMinCoord() << ":" << data->task->getMaxCoord() << "]" << std::endl;
-    scriptfile << "set yrange [" << data->yMin << ":" << data->yMax << "]" << std::endl;
+    scriptfile << "set yrange [" << _yMin << ":" << _yMax << "]" << std::endl;
     scriptfile << "set xlabel 'Координата' font 'Helvetica,18'" << std::endl;
     scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
     //scriptfile << "" << std::endl;
@@ -87,7 +114,9 @@ void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
     scriptfile << "    print current, '%'" << std::endl;
     scriptfile << "    progress = current" << std::endl;
     scriptfile << "  }" << std::endl;
-    scriptfile << "  plot '" << name << ".dat' using 1:i with lines smooth csplines title sprintf(\"t=%f\", (i-2) * " << data->task->getTimeStep() << ")" << std::endl;
+    scriptfile << "  plot '" << name << "_real.dat' using 1:i with lines smooth csplines ti 'real part' ,\\" << std::endl;
+    scriptfile << "  '" << name << "_imag.dat' using 1:i with lines smooth csplines ti 'imag part' ,\\" << std::endl;
+    scriptfile << "  '" << name << "_abs.dat' using 1:i with lines smooth csplines ti 'abs'" << std::endl;
     scriptfile << "}" << std::endl;
     scriptfile.close();
     Logger::verbose("Scriptfile has been written");
