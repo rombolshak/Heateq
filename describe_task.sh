@@ -15,20 +15,21 @@ OUTPUT_FUNCTIONS="""
  * If you wanna change these functions, look into $ME
  */
 #include <math.h>
+#include <complex>
 
-extern double f(double x, double t) {
+extern std::complex< double > f(double x, double t) {
     return $F;
 }
 
-extern double initial(double x) {
+extern std::complex< double > initial(double x) {
     return $I;
 }
 
-extern double boundaryLeft(double t) {
+extern std::complex< double > boundaryLeft(double t) {
     return $BL;
 }
 
-extern double boundaryRight(double t) {
+extern std::complex< double > boundaryRight(double t) {
     return $BR;
 }
 
