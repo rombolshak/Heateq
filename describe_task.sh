@@ -3,8 +3,9 @@
 ME=`basename $0`
 
 ALPHA='i/2'
-F="x*x/2 + 15 * x * sin(t)"
-I="1/sqrt(sqrt(3.1415926)) * exp(-x * x / 2)"
+#F="x*x/2 + 15 * x * sin(t)"
+F="0"
+I="exp((-(x-0.5)*(x-0.5))/(2*0.2)) / (sqrt(0.2) * sqrt(2*3.1415926))"
 BL="0"
 BR="0"
 
