@@ -160,8 +160,7 @@ void PlotDataPreparer::execute(std::string name)
     
     if (gnuplotStatus != 0) {
         Logger::warning("There is no gnuplot found. Please copy " + scriptfilename + " to machine with installed gnuplot and run: ./" + scriptfilename);
-    }
-    
+    }    
     else {
         Logger::verbose("Running gnuplot");
         std::string gnuplotCommand = "./" + scriptfilename;

@@ -1,5 +1,4 @@
 #!/usr/bin/octave -qf
-#set(0, 'defaultfigurevisible', 'off');
 filename = "result.hof";
 arg_list = argv();
 if (nargin !=  0)

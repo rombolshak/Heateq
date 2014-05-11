@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 
-FILENAME=${1}
-XMIN=${2}
-XMAX=${3}
-YMIN=${4}
-YMAX=${5}
+FILENAME=$1
+XMIN=$2
+XMAX=$3
+YMIN=$4
+YMAX=$5
 
 echo $XMIN
 echo $XMAX

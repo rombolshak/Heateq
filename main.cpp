@@ -91,8 +91,7 @@ int main(int argc, char **argv) {
     
     Logger::verbose("Create task");
     Task *task = new Task(&f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times, independent);
-    PlotDataPreparer writer;
-    
+    PlotDataPreparer writer;    
     writer.WriteData(task->isTimeIndependent() ? TimeIndependentSolver::solve(task) : Solver::solve(task), output);
     
     MPI_Finalize();

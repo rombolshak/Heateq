@@ -1,4 +1,4 @@
-CC=mpic++
+CC=mpiCC
 CFLAGS= -g -std=c++0x
 LDFLAGS= 
 SRC=solver.cpp timeindependentsolver.cpp logger.cpp plotdatapreparer.cpp solvedata.cpp task.cpp main.cpp

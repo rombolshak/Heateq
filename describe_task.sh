@@ -5,6 +5,7 @@ ME=`basename $0`
 ALPHA='i/2'
 #F="x*x/2 + 15 * x * sin(t)"
 F="if (x < 0.25 || x > 0.75) return 100500; return 0;"
+# vars below not used in time-independent task
 I="exp((-(x-0.5)*(x-0.5))/(2*0.2)) / (sqrt(0.2) * sqrt(2*3.1415926))"
 BL="0"
 BR="0"

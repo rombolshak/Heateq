@@ -28,8 +28,7 @@ public:
     double getMinCoord();
     double getMaxCoord();
     double getTimeStep();
-    double getCoordStep();
-    
+    double getCoordStep();    
     bool isTimeIndependent();
     
 private:

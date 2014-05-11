@@ -27,33 +27,33 @@ Task::Task(double (*f)(double, double),
     _timeIndependent = timeIndependent;
     
     if (_maxCoord - _minCoord < 1e-6) {
-	Logger::error("Coordinates difference too small. Nothing to compute. Quit");
-	exit(1);
+        Logger::error("Coordinates difference too small. Nothing to compute. Quit");
+        exit(1);
     }
     
     if (_maxTime < 0) {
-	Logger::error("Unacceptable time");
-	exit(1);
+        Logger::error("Unacceptable time");
+        exit(1);
     }
     
     if (_timeIndependent) {
-	_maxTime = 0;
+        _maxTime = 0;
     }
     
     if (coordStepsCount < 0) {
-	Logger::warning("Coords count negative. Assume you meant " + std::to_string(-coordStepsCount));
-	coordStepsCount = -coordStepsCount;
+        Logger::warning("Coords count negative. Assume you meant " + std::to_string(-coordStepsCount));
+        coordStepsCount = -coordStepsCount;
     }
     
     if (timeStepsCount < 0) {
-	Logger::warning("Times count negative. Assume you meant " + std::to_string(-timeStepsCount));
-	timeStepsCount = -timeStepsCount;
+        Logger::warning("Times count negative. Assume you meant " + std::to_string(-timeStepsCount));
+        timeStepsCount = -timeStepsCount;
     }
     
     if (!_timeIndependent) {
-	if (_initial(minCoord) != _boundaryLeft(0) || _initial(maxCoord) != _boundaryRight(0)) {
-	    Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
-	}
+        if (_initial(minCoord) != _boundaryLeft(0) || _initial(maxCoord) != _boundaryRight(0)) {
+            Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
+        }
     }
     
     _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
@@ -61,8 +61,8 @@ Task::Task(double (*f)(double, double),
     
     double maxTimeStep = 0.5 * _coordStep * _coordStep;
     if (maxTimeStep < _timeStep) {
-	Logger::warning("Time step has inappropiate value. It was shrank to " + std::to_string(maxTimeStep));
-	_timeStep = maxTimeStep;
+        Logger::warning("Time step has inappropiate value. It was shrank to " + std::to_string(maxTimeStep));
+        _timeStep = maxTimeStep;
     }
     
     std::ostringstream strs;

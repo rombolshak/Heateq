@@ -7,6 +7,7 @@ class TimeIndependentSolver
 {
 public:
     static SolveData* solve(Task* task);
+
 private:
     static void bisect(double b, int count, int gridColumns, double eps1, long double precision, Task *task, double coordStep, double * x);
     static double getDiagValue(Task *task, int index, double coordStep);

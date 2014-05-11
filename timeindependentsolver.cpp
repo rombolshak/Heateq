@@ -304,7 +304,6 @@ SolveData* TimeIndependentSolver::solve(Task *task)
     return new SolveData(task, grid);
 }
 
-
 double TimeIndependentSolver::getDiagValue(Task *task, int index, double coordStep) {
     return 2. + task->calcF(index * coordStep, 0) * coordStep * coordStep;
 }
