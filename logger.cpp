@@ -3,11 +3,14 @@
 #include <time.h>
 #include <string>
 #include <stdio.h>
+#include "mpi.h"
 
 int Logger::_mode = 3;
 
 void Logger::write(std::string s)
 {
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     time_t     now = time(0);
     struct tm  tstruct;
     char       buf[80];
@@ -15,34 +18,36 @@ void Logger::write(std::string s)
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
     strftime(buf, sizeof(buf), "%X", &tstruct);
-    std::cout << buf << ": " << s;
+    if (0 == rank) {
+        std::cout << buf << ": " << s << std::endl;
+    }
 }
 
 void Logger::error(std::string s)
 {
     if (_mode > 0) {
-	std::cout << "!!! [ERROR]: " << s << std::endl;
+        write("!!! [ERROR]: " + s);
     }
 }
 
 void Logger::warning(std::string s)
 {
     if (_mode > 1) {
-	std::cout << "! [WARNING]: " << s << std::endl;
+        write("! [WARNING]: " + s);
     }
 }
 
 void Logger::info(std::string s)
 {
     if (_mode > 2) {
-	std::cout << "[INFO]: " << s << std::endl;
+        write("[INFO]: " + s);
     }
 }
 
 void Logger::verbose(std::string s)
 {
     if (_mode > 3) {
-	std::cout << "[VERBOSE]: " << s << std::endl;
+        write("[VERBOSE]: " + s);
     }
 }
 

@@ -7,6 +7,7 @@ class Solver
 {
 public:
     static SolveData* solve(Task* task);
+private:
 };
 
 #endif // SOLVER_H

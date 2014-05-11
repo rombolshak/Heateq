@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <sstream>
 
-Task::Task(std::complex<double> (*f)(double, double), 
+Task::Task(double (*f)(double, double),
 	   std::complex<double> (*initial)(double),
 	   std::complex<double> (*boundaryLeft)(double),
 	   std::complex<double> (*boundaryRight)(double),
@@ -13,7 +13,9 @@ Task::Task(std::complex<double> (*f)(double, double),
 	   double timeStep,
 	   double coordStep,
 	   double coordStepsCount,
-	   double timeStepsCount)
+	   double timeStepsCount,
+	   bool timeIndependent
+  	)
 {
     _f = f;
     _initial = initial;
@@ -22,15 +24,20 @@ Task::Task(std::complex<double> (*f)(double, double),
     _maxTime = maxTime;
     _minCoord = minCoord;
     _maxCoord = maxCoord;
+    _timeIndependent = timeIndependent;
     
     if (_maxCoord - _minCoord < 1e-6) {
 	Logger::error("Coordinates difference too small. Nothing to compute. Quit");
 	exit(1);
     }
     
-    if (_maxTime <= 0) {
+    if (_maxTime < 0) {
 	Logger::error("Unacceptable time");
 	exit(1);
+    }
+    
+    if (_timeIndependent) {
+	_maxTime = 0;
     }
     
     if (coordStepsCount < 0) {
@@ -43,8 +50,10 @@ Task::Task(std::complex<double> (*f)(double, double),
 	timeStepsCount = -timeStepsCount;
     }
     
-    if (_initial(minCoord) != _boundaryLeft(0) || _initial(maxCoord) != _boundaryRight(0)) {
-	Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
+    if (!_timeIndependent) {
+	if (_initial(minCoord) != _boundaryLeft(0) || _initial(maxCoord) != _boundaryRight(0)) {
+	    Logger::warning("Initial and boundaries conditions are NOT conclusive. Will use initial values at t = 0 even at boundary points");
+	}
     }
     
     _coordStep = coordStepsCount == 0 ? coordStep : (maxCoord - minCoord) / coordStepsCount;
@@ -58,6 +67,7 @@ Task::Task(std::complex<double> (*f)(double, double),
     
     std::ostringstream strs;
     strs << "Created task with following specifications:" << std::endl <<
+    "Time " << (_timeIndependent ? "in" : "") << "dependent" << std::endl <<
     "Time from 0 to " << _maxTime << std::endl <<
     "Coordinates from " << _minCoord <<  " to " << _maxCoord << std::endl <<
     "Timestep is " << _timeStep << ", total times count is " << (_maxTime / _timeStep) << std::endl <<
@@ -65,7 +75,7 @@ Task::Task(std::complex<double> (*f)(double, double),
     Logger::info(strs.str());    
 }
 
-std::complex<double> Task::calcF(double x, double t)
+double Task::calcF(double x, double t)
 {
     return _f(x, t);
 }
@@ -108,4 +118,9 @@ double Task::getTimeStep()
 double Task::getCoordStep()
 {
     return _coordStep;
+}
+
+bool Task::isTimeIndependent()
+{
+    return _timeIndependent;
 }

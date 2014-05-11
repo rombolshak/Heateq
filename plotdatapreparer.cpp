@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include "mpi.h"
 
 extern std::string alpha_description();
 extern std::string f_description();
@@ -18,14 +19,11 @@ PlotDataPreparer::PlotDataPreparer()
 
 void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose)
 {
-    double coordStep = data->task->getCoordStep();
-    double timeStep = data->task->getTimeStep();
-    int gridColumns = (data->task->getMaxCoord() - data->task->getMinCoord()) / coordStep;
-    int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
-    
     writeDatafile(name, data);
-    writeScriptfile(name, data);
-    execute(name);
+    if (!data->task->isTimeIndependent()) {
+        writeScriptfile(name, data);
+        execute(name);
+    }
     
     if (dispose) {
 	Logger::verbose("Dispose data");
@@ -34,56 +32,84 @@ void PlotDataPreparer::WriteData(SolveData* data, std::string name, bool dispose
 }
 
 void PlotDataPreparer::writeDatafile(std::string name, SolveData* data)
-{
-    double coordStep = data->task->getCoordStep();
-    double minCoord = data->task->getMinCoord();
-    int gridColumns = (data->task->getMaxCoord() - minCoord) / coordStep;
-    int gridRows = data->task->getMaxTime() / data->task->getTimeStep();
-    
-    std::string realdatafilename = name + "_real.dat";
-    std::string imagdatafilename = name + "_imag.dat";
-    std::string absdatafilename = name + "_abs.dat";
-    Logger::verbose("Begin writing data files: " + realdatafilename + ", " + imagdatafilename + ", " + absdatafilename);
-    
-    std::ofstream realdatafile(realdatafilename.c_str(), std::ofstream::out);
-    std::ofstream imagdatafile(imagdatafilename.c_str(), std::ofstream::out);
-    std::ofstream absdatafile(absdatafilename.c_str(), std::ofstream::out);
-    
-    _yMax = _yMin = (data->solveGrid[0][0]).real();
-    double real, imag, absolute;
-    for (int x = 0; x < gridColumns; ++x) {
-	realdatafile << (x * coordStep + minCoord) << " ";
-	imagdatafile << (x * coordStep + minCoord) << " ";
-	absdatafile << (x * coordStep + minCoord) << " ";
+{	
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    if (0 == rank)
+    {
+	double coordStep = data->task->getCoordStep();
+	double minCoord = data->task->getMinCoord();
+	int gridColumns = (data->task->getMaxCoord() - minCoord) / coordStep;
+	int gridRows = data->task->isTimeIndependent() ? 1 : data->task->getMaxTime() / data->task->getTimeStep();
 	
-	for (int t = 0; t < gridRows; ++t) {
-	    real = (data->solveGrid[t][x]).real();
-	    imag = (data->solveGrid[t][x]).imag();
-	    absolute = sqrt(real * real + imag * imag);
+    std::string realDataFileName = ".real.dat";
+    std::string imagDataFileName = ".imag.dat";
+    std::string absDataFileName = ".abs.dat";
+    std::string taskDataFileName = ".task.dat";
+    std::string potentialDataFileName = ".u.dat";
+    Logger::verbose("Begin writing data files: " + realDataFileName + ", " + imagDataFileName + ", " +
+                    absDataFileName + ", " + taskDataFileName + ", " + potentialDataFileName);
+	
+    std::ofstream realDataFile(realDataFileName.c_str(), std::ofstream::out);
+    std::ofstream imagDataFile(imagDataFileName.c_str(), std::ofstream::out);
+    std::ofstream absDataFile(absDataFileName.c_str(), std::ofstream::out);
+    std::ofstream taskDataFile(taskDataFileName.c_str(), std::ofstream::out);
+    std::ofstream potentialDataFile(potentialDataFileName.c_str(), std::ofstream::out);
+	
+    taskDataFile << data->task->isTimeIndependent() << " " << data->task->getMinCoord() << " " << data->task->getMaxCoord() << " " << data->task->getMaxTime() << " " <<
+			data->task->getTimeStep() << " " << data->task->getCoordStep();
+	
+	_yMax = _yMin = (data->solveGrid[0][0]).real();
+    double real, imag, absolute, potential;
+	for (int x = 0; x < gridColumns; ++x) {
+        realDataFile << (x * coordStep + minCoord) << " ";
+        imagDataFile << (x * coordStep + minCoord) << " ";
+        absDataFile << (x * coordStep + minCoord) << " ";
+        potentialDataFile << (x * coordStep + minCoord) << " ";
+
+	    for (int t = 0; t < gridRows; ++t) {
+		real = (data->solveGrid[t][x]).real();
+		imag = (data->solveGrid[t][x]).imag();
+		absolute = sqrt(real * real + imag * imag);
+        potential = data->task->calcF(x * coordStep, t * data->task->getTimeStep());
+		
+		_yMax = std::max<double>(_yMax, std::max<double>(real, std::max<double>(imag, absolute)));
+		_yMin = std::min<double>(_yMin, std::min<double>(real, std::min<double>(imag, absolute)));
+		
+        realDataFile << real << " ";
+        imagDataFile << imag << " ";
+        absDataFile << absolute << " ";
+        potentialDataFile << potential << " ";
+	    }
 	    
-	    _yMax = std::max<double>(_yMax, std::max<double>(real, std::max<double>(imag, absolute)));
-	    _yMin = std::min<double>(_yMin, std::min<double>(real, std::min<double>(imag, absolute)));
-	    
-	    realdatafile << real << " ";
-	    imagdatafile << imag << " ";
-	    absdatafile << absolute << " ";
+        realDataFile << std::endl;
+        imagDataFile << std::endl;
+        absDataFile << std::endl;
+        potentialDataFile << std::endl;
 	}
 	
-	realdatafile << std::endl;
-	imagdatafile << std::endl;
-	absdatafile << std::endl;
+    realDataFile << std::endl;
+    realDataFile.close();
+	
+    imagDataFile << std::endl;
+    imagDataFile.close();
+	
+    absDataFile << std::endl;
+    absDataFile.close();
+	
+    taskDataFile << std::endl;
+    taskDataFile.close();
+
+    potentialDataFile << std::endl;
+    potentialDataFile.close();
+	
+	Logger::verbose("Datafiles has been written");
+	
+    std::string allFiles = realDataFileName + " " + imagDataFileName + " " +
+            absDataFileName + " " + taskDataFileName + " " + potentialDataFileName;
+    std::string archiveCommand = "tar -cf " + name + ".hof " + allFiles;// + " && rm " + allFiles;
+	system(archiveCommand.c_str());
     }
-    
-    realdatafile << std::endl;
-    realdatafile.close();
-    
-    imagdatafile << std::endl;
-    imagdatafile.close();
-    
-    absdatafile << std::endl;
-    absdatafile.close();
-    
-    Logger::verbose("Datafiles has been written");
 }
 
 void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
@@ -104,7 +130,7 @@ void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
     scriptfile << "set xrange [" << data->task->getMinCoord() << ":" << data->task->getMaxCoord() << "]" << std::endl;
     scriptfile << "set yrange [" << _yMin << ":" << _yMax << "]" << std::endl;
     scriptfile << "set xlabel 'Координата' font 'Helvetica,18'" << std::endl;
-    scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
+    //scriptfile << "set ylabel 'Температура' font 'Helvetica,18'" << std::endl;
     //scriptfile << "" << std::endl;
     scriptfile << "progress = 0" << std::endl;
     scriptfile << "total = " << ((data->task->getMaxTime() / data->task->getTimeStep())+1) << std::endl;
@@ -114,9 +140,9 @@ void PlotDataPreparer::writeScriptfile(std::string name, SolveData* data)
     scriptfile << "    print current, '%'" << std::endl;
     scriptfile << "    progress = current" << std::endl;
     scriptfile << "  }" << std::endl;
-    scriptfile << "  plot '" << name << "_real.dat' using 1:i with lines smooth csplines ti 'real part' ,\\" << std::endl;
-    scriptfile << "  '" << name << "_imag.dat' using 1:i with lines smooth csplines ti 'imag part' ,\\" << std::endl;
-    scriptfile << "  '" << name << "_abs.dat' using 1:i with lines smooth csplines ti 'abs'" << std::endl;
+    scriptfile << "  plot '.real.dat' using 1:i with lines smooth csplines ti 'real part' ,\\" << std::endl;
+    scriptfile << "  '.imag.dat' using 1:i with lines smooth csplines ti 'imag part' ,\\" << std::endl;
+    scriptfile << "  '.abs.dat' using 1:i with lines smooth csplines ti 'abs'" << std::endl;
     scriptfile << "}" << std::endl;
     scriptfile.close();
     Logger::verbose("Scriptfile has been written");
@@ -133,12 +159,12 @@ void PlotDataPreparer::execute(std::string name)
     int gnuplotStatus = system("/usr/bin/which gnuplot");
     
     if (gnuplotStatus != 0) {
-	Logger::warning("There is no gnuplot found. Please copy " + scriptfilename + " to machine with installed gnuplot and run: ./" + scriptfilename);
+        Logger::warning("There is no gnuplot found. Please copy " + scriptfilename + " to machine with installed gnuplot and run: ./" + scriptfilename);
     }
     
     else {
-	Logger::verbose("Running gnuplot");
-	std::string gnuplotCommand = "./" + scriptfilename;
-	system(gnuplotCommand.c_str());
+        Logger::verbose("Running gnuplot");
+        std::string gnuplotCommand = "./" + scriptfilename;
+        system(gnuplotCommand.c_str());
     }
 }

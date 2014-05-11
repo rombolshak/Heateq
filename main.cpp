@@ -6,10 +6,12 @@
 #include <string>
 #include "task.h"
 #include "solver.h"
+#include "timeindependentsolver.h"
 #include "plotdatapreparer.h"
 #include "logger.h"
+#include "mpi.h"
 
-extern std::complex< double > f(double x, double t);
+extern double f(double x, double t);
 extern std::complex< double > initial(double x);
 extern std::complex< double > boundaryLeft(double t);
 extern std::complex< double > boundaryRight(double t);
@@ -19,14 +21,15 @@ void printUsage(const char *name) {
     "Usage: " << name << " [options]" << std::endl <<
     "Options: " << std::endl <<
     "-h|--help\t\tShow this usage message and quit" << std::endl <<
-    "-m n|--time=n\t\tMaximum time to calculate; default = 1" << std::endl <<
+    "-i|--independent\tSolve time-independent problem" << std::endl <<
+    "-m n|--time=n\t\tMaximum time to calculate; default = 1, or 0 if time-independent" << std::endl <<
     "-l n|--left=n\t\tLeft coordinate; default = 0" << std::endl << 
     "-r n|--right=n\t\tRight coordinate; default = 1" << std::endl <<
-    "-t n|--timestep=n\tTime step; default = 0.001" << std::endl <<
+    "-t n|--timestep=n\tTime step; default = 0.001, or ignored if time-independent" << std::endl <<
     "-c n|--coordstep=n\tCoordinate step; default = 0.05. Please notice that time step depends on coordinate step in such way: ts <= 0.5 * cs^2" << std::endl <<
     "--times=n\t\tTimes count; if given, time step option will be ignored" << std::endl <<
     "--coords=n\t\tCoordinates count; if given, coordinate step option will be ognored" << std::endl <<
-    "-o s|--output=s\t\tResult namebase. Program'll generate 'result.dat' with plot data and 'result.pl' with script that will produce 'result.gif' plot. Default: 'result'" << std::endl <<
+    "-o s|--output=s\t\tResult namebase. Default: 'result'" << std::endl <<
     "-v n|--verbose=n\tVerbose level: " << std::endl <<
     "\t\t\t\t0 -- no output,"<< std::endl <<
     "\t\t\t\t1 -- errors only, "<< std::endl << 
@@ -38,6 +41,7 @@ void printUsage(const char *name) {
 }
 
 int main(int argc, char **argv) {
+    MPI_Init(&argc,&argv);
     int param = 0;
     int option_index = -1;
     opterr = 0;
@@ -49,6 +53,7 @@ int main(int argc, char **argv) {
     
     const char *shortOptions = "hm:l:r:t:c:v:o:";
     const struct option longOptions[] = {
+	{"independent",no_argument,NULL,'i'},
 	{"help",no_argument,NULL,'h'},
 	{"time",required_argument,NULL,'m'},
 	{"left",required_argument,NULL,'l'},
@@ -63,6 +68,7 @@ int main(int argc, char **argv) {
     };
     
     double left=0, right=1, time=1, timestep=0.001, coordstep=0.05, times=0, coords=0;
+    bool independent = false;
     std::string output;
     output = "result";
     
@@ -71,6 +77,7 @@ int main(int argc, char **argv) {
 	switch (param) {
 	    case '?': Logger::error("Unknown option! Read this manual carefully"); printUsage(argv[0]); return 0;
 	    case 'h': Logger::verbose("Show help"); printUsage(argv[0]); return 0;
+	    case 'i': independent = true;	Logger::verbose("Set time-independent to true"); break;
 	    case 'm': time = atof(optarg); 	Logger::verbose("Set max time to " + std::to_string(time)); break;
 	    case 'l': left = atof(optarg); 	Logger::verbose("Set left to " + std::to_string(left)); break;
 	    case 'r': right = atof(optarg); 	Logger::verbose("Set right to " + std::to_string(right)); break;
@@ -83,10 +90,11 @@ int main(int argc, char **argv) {
     }
     
     Logger::verbose("Create task");
-    Task *task = new Task(&f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times);
+    Task *task = new Task(&f, &initial, &boundaryLeft, &boundaryRight, time, left, right, timestep, coordstep, coords, times, independent);
     PlotDataPreparer writer;
     
-    writer.WriteData(Solver::solve(task), output);
+    writer.WriteData(task->isTimeIndependent() ? TimeIndependentSolver::solve(task) : Solver::solve(task), output);
     
+    MPI_Finalize();
     return 0;
 }
