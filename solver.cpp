@@ -12,6 +12,12 @@ SolveData* Solver::solve(Task* task)
     double timeStep = task->getTimeStep();
     int gridColumns = (task->getMaxCoord() - task->getMinCoord()) / coordStep;
     int gridRows = task->getMaxTime() / task->getTimeStep();
+
+    bool timeIndependent = task->isTimeIndependent();
+    if (timeIndependent) {
+        Logger::error("Use of implicit scheme solver for time-independent task is not appropriate");
+        throw 42;
+    }
     
     std::vector< std::vector< std::complex<double> > > grid (gridRows, std::vector< std::complex< double > >(gridColumns, std::complex<double>(0)));
     Logger::verbose("Grid allocated");

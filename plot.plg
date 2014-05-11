@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+
+FILENAME=${1}
+XMIN=${2}
+XMAX=${3}
+YMIN=${4}
+YMAX=${5}
+
+echo $XMIN
+echo $XMAX
+echo $YMIN
+echo $YMAX
+
+/usr/bin/gnuplot -persist <<EOF
+set term gif animate enhanced 
+set output "$FILENAME"
+set xrange [$XMIN:$XMAX]
+set yrange [$YMIN:$YMAX]
+
+progress = 0
+total = 1000
+do for [i=2:total] {
+  current = i * 100 / total
+  if (current > progress) {
+    print current, '%'
+    progress = current
+  }
+  plot '.real.dat' using 1:i with lines smooth csplines ti 'real part' ,\
+	'.imag.dat' using 1:i with lines smooth csplines ti 'imag part' ,\
+	'.abs.dat' using 1:i with lines smooth csplines ti 'abs'
+}
+EOF
