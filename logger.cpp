@@ -49,9 +49,16 @@ void Logger::verbose(std::string s)
     }
 }
 
+void Logger::debug(std::string s)
+{
+    if (_mode > 4) {
+        write("[DEBUG]: " + s);
+    }
+}
+
 void Logger::setMode(int mode)
 {
-    if (mode >= 0 && mode <= 4) {
+    if (mode >= 0 && mode <= 5) {
 	Logger::_mode = mode;
     }
  

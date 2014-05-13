@@ -159,8 +159,8 @@ void TimeIndependentSolver::prepareTDA(int totalCount, double* f, double* c, int
         f[i] -= m * f[i - 1];
     }
     if (rank != commSize - 1) {
-        MPI_Send(&c[totalCount - 1], 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
-        MPI_Send(&f[totalCount - 1], 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+        MPI_Send(&(c[totalCount - 1]), 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+        MPI_Send(&(f[totalCount - 1]), 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
     }
 }
 
@@ -175,13 +175,14 @@ void TimeIndependentSolver::calcNewVector(double* c, double* f, double* calcVect
         double next;
         MPI_Recv(&next, 1, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         calcVector[totalCount - 1] = (f[totalCount - 1] + next) / c[totalCount - 1];
+        calcNorm += calcVector[totalCount - 1] * calcVector[totalCount - 1];
     }
     for (int i = totalCount - 2; i >= 0; --i) {
         calcVector[i] = (f[i] + calcVector[i + 1]) / c[i];
         calcNorm += calcVector[i] * calcVector[i];
     }
     if (rank != 0) {
-        MPI_Send(&calcVector[0], 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+        MPI_Send(&(calcVector[0]), 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
     }
 
     MPI_Allreduce(MPI_IN_PLACE, &calcNorm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -234,7 +235,10 @@ void TimeIndependentSolver::inverseIteration(double coordStep, int gridColumns, 
     }
 
     calcFirstApproximation(eigenVector, diagElements, coordStep, totalCount, n, task);
+    Logger::verbose("First approximation calculated");
+
     for (int iteration = 1;;++iteration) {
+        Logger::debug("Start iteration #" + std::to_string(iteration));
         memcpy(c, diagElements, totalCount * sizeof(double));
 
         #pragma omp parallel for
@@ -243,8 +247,12 @@ void TimeIndependentSolver::inverseIteration(double coordStep, int gridColumns, 
         }
 
         prepareTDA(totalCount, f, c, rank, commSize);
+        Logger::debug("PrepareTDA success");
         calcNewVector(c, f, calcVector, totalCount, rank, commSize);
+        Logger::debug("Calc new vector success");
+
         double diff = calcDiff(totalCount, eigenVector, calcVector);
+        Logger::debug("Diff calculated: " + std::to_string(diff));
 
         if ((diff < threshold) || (std::abs(diff - 2) < threshold)) {
             Logger::verbose("Diff: " + std::to_string(diff * 1e10));

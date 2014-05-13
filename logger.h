@@ -9,6 +9,7 @@ public:
     static void warning(std::string s);
     static void info(std::string s);
     static void verbose(std::string s);
+    static void debug(std::string s);
     static void setMode(int mode);
     static void write(std::string s);
 private:
