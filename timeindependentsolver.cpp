@@ -1,7 +1,7 @@
 #include "timeindependentsolver.h"
 #include "logger.h"
 #include <mpi.h>
-#include <cmath>
+#include <math.h>
 #include <limits>
 #include <string>
 
@@ -24,12 +24,12 @@ void TimeIndependentSolver::bisect(double b, int count, int gridColumns, double 
 
     double beta = b * b;
 
-    double xmin = c[totalCount-1] - std::abs(b);
-    double xmax = c[totalCount-1] + std::abs(b);
+    double xmin = c[totalCount-1] - abs(b);
+    double xmax = c[totalCount-1] + abs(b);
 
     #pragma omp parallel for reduction(max:xmax) reduction(min, xmin)
     for (int i = totalCount-2; i >= 0; --i) {
-        double h = std::abs(b) + std::abs(b);
+        double h = abs(b) + abs(b);
         if (c[i] + h > xmax) {
             xmax = c[i] + h;
         }
@@ -62,7 +62,7 @@ void TimeIndependentSolver::bisect(double b, int count, int gridColumns, double 
             x0 = x[k];
         }
 
-        while( x0 - xu > 2 * precision * (std::abs(xu) + std::abs(x0)) + eps1) {
+        while( x0 - xu > 2 * precision * (abs(xu) + abs(x0)) + eps1) {
             double x1 = (xu + x0) / 2;
             int a = 0;
             double q = 1;
@@ -70,7 +70,7 @@ void TimeIndependentSolver::bisect(double b, int count, int gridColumns, double 
                 MPI_Recv(&q, 1, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             for (int i = 0; i < totalCount; ++i) {
-                q = c[i] - x1 - (q != 0 ? (0 == rank && 0 == i ? 0 : beta / q) : std::abs(b)/precision);
+                q = c[i] - x1 - (q != 0 ? (0 == rank && 0 == i ? 0 : beta / q) : abs(b)/precision);
                 if (q < 0) {
                     a += 1;
                 }
@@ -112,8 +112,8 @@ void TimeIndependentSolver::calcFirstApproximation(double* eigenVector, double* 
     }
     else {
         double prev, double_prev;
-        MPI_Recv(&double_prev, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&prev, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&double_prev, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         eigenVector[0] = -1. * double_prev + getDiagValue(task, rank * n - 1, coordStep) * prev;
         eigenVector[1] = -1. * prev + diagElements[0] * eigenVector[0];
         norm += eigenVector[0] * eigenVector[0] + eigenVector[1] * eigenVector[1];
@@ -147,7 +147,7 @@ void TimeIndependentSolver::prepareTDA(int totalCount, double* f, double* c, int
 {
     if (rank != 0) {
         double prev_c, prev_f;
-        MPI_Recv(&prev_c, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&prev_f, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&prev_f, 1, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         double m = -1 / prev_c;
         c[0] += m;
@@ -207,7 +207,7 @@ double TimeIndependentSolver::calcDiff(int totalCount, double* eigenVector, doub
     MPI_Allreduce(MPI_IN_PLACE, &diff, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     diff = 2 - diff;
-    diff = sqrt(std::abs(diff));
+    diff = sqrt(abs(diff));
     return diff;
 }
 
@@ -254,7 +254,7 @@ void TimeIndependentSolver::inverseIteration(double coordStep, int gridColumns, 
         double diff = calcDiff(totalCount, eigenVector, calcVector);
         Logger::debug("Diff calculated: " + std::to_string(diff / threshold));
 
-        if ((diff < threshold) || (std::abs(diff - 2) < threshold)) {
+        if (diff < threshold) {
             Logger::verbose("Diff: " + std::to_string(diff / threshold));
             Logger::verbose("Threshold: " + std::to_string(threshold / threshold));
             Logger::verbose("Iteration: " + std::to_string(iteration));
@@ -268,11 +268,11 @@ void TimeIndependentSolver::inverseIteration(double coordStep, int gridColumns, 
 
     MPI_Gather(eigenVector, n, MPI_DOUBLE, output, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    delete[] f;
-    delete[] c;
-    delete[] calcVector;
-    delete[] eigenVector;
-    delete[] diagElements;
+    delete f;
+    delete c;
+    delete calcVector;
+    delete eigenVector;
+    delete diagElements;
 }
 
 SolveData* TimeIndependentSolver::solve(Task *task)
@@ -310,7 +310,7 @@ SolveData* TimeIndependentSolver::solve(Task *task)
         grid[0][i] = eigenVector[i];
     }
 
-    delete[] eigenValues;
+    delete eigenValues;
     return new SolveData(task, grid);
 }
 
