@@ -252,11 +252,11 @@ void TimeIndependentSolver::inverseIteration(double coordStep, int gridColumns, 
         Logger::debug("Calc new vector success");
 
         double diff = calcDiff(totalCount, eigenVector, calcVector);
-        Logger::debug("Diff calculated: " + std::to_string(diff));
+        Logger::debug("Diff calculated: " + std::to_string(diff / threshold));
 
         if ((diff < threshold) || (std::abs(diff - 2) < threshold)) {
-            Logger::verbose("Diff: " + std::to_string(diff * 1e10));
-            Logger::verbose("Threshold: " + std::to_string(threshold * 1e10));
+            Logger::verbose("Diff: " + std::to_string(diff / threshold));
+            Logger::verbose("Threshold: " + std::to_string(threshold / threshold));
             Logger::verbose("Iteration: " + std::to_string(iteration));
             break;
         }
@@ -294,14 +294,16 @@ SolveData* TimeIndependentSolver::solve(Task *task)
 
     double * eigenValues = new double[4];
     double * eigenVector = new double[gridColumns];
-    double threshold = 1e-7;
+    double threshold = 1e-7 / gridColumns;
+    double vectorThreshold = 1e-7;
 
     bisect(-1, 4, gridColumns, threshold, std::numeric_limits<double>::epsilon(), task, coordStep, eigenValues);
 
     double eigenValue = eigenValues[3];
     Logger::info("Obtained eigen value: " + std::to_string(eigenValue));
+    Logger::info("qwe: " + std::to_string(eigenValue * gridColumns * gridColumns));
 
-    inverseIteration(coordStep, gridColumns, eigenValue, task, threshold, eigenVector);
+    inverseIteration(coordStep, gridColumns, eigenValue, task, vectorThreshold, eigenVector);
 
     #pragma omp parallel for
     for (int i = 0; i < gridColumns; ++i) {
